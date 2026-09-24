@@ -1,0 +1,34 @@
+# dw
+
+A read-only Go CLI for the DocuWare Platform REST API (Cloud or on-premises, 7.10+): search, read and download
+documents from the terminal, built to be driven by coding agents such as Claude Code.
+
+Documentation (raw Markdown):
+- Agent setup runbook (install and configure dw for a user): https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/agent-setup.md
+- Overview: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/index.md
+- Install: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/install.md
+- Quickstart: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/quickstart.md
+- Using dw from agents: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/agents.md
+- DocuWare setup (administrator): https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/docuware-setup.md
+- Search syntax: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/search.md
+- Commands: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/commands.md
+- Output and exit codes: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/output.md
+- Authentication: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/authentication.md
+- Configuration: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/configuration.md
+- Troubleshooting: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/troubleshooting.md
+- Architecture: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/architecture.md
+- DocuWare API notes: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/docuware-api.md
+- Testing: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/testing.md
+- Releasing: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/releasing.md
+- Rules for agents changing the code: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/AGENTS.md
+
+Install:
+- Release binaries: https://github.com/rechedev9/docuware-cli/releases/latest
+- go install github.com/rechedev9/docuware-cli/cmd/dw@latest   (Go 1.26+)
+
+Source: https://github.com/rechedev9/docuware-cli
+
+Guidance for agents:
+- To install dw for a user, follow the agent setup runbook from top to bottom.
+- Never ask the user for their DocuWare password; they run `dw login` in their own terminal.
+- Fetch only the pages the current task needs.

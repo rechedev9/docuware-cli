@@ -1,133 +1,131 @@
-# dw — DocuWare from the terminal
+# dw 🗂️ — DocuWare from the terminal
 
-`dw` is a single-binary CLI for the DocuWare Platform REST API (Cloud or on-premises, 7.10+).
-It is built to be driven by coding agents such as Claude Code: `--json` everywhere, stable exit codes,
-errors that list the valid choices, and output capped to keep agent context small.
+Search, read and download DocuWare documents with one binary, built so Claude Code and other agents can use it
+safely.
 
-It is read-only for now: it searches, reads and downloads, but cannot change or delete anything.
+`dw` talks to the DocuWare Platform REST API (Cloud or on-premises, 7.10+). Every command has `--json`, exit codes are
+stable, errors list the valid choices, and output is capped to keep agent context small. It is **read-only**: nothing
+it does can change or delete a document.
+
+## Set it up with your AI agent
+
+Paste this into Claude Code (or any coding agent that can run shell commands):
+
+```text
+Install and set up the DocuWare CLI "dw" for me by following
+https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/agent-setup.md step by step.
+```
+
+The agent installs the binary, asks you for your DocuWare address and user name, has **you** type the password in
+your own terminal (it never sees it), installs the Claude Code skill and checks everything works.
 
 ## Install
 
-Download the archive for your system from [Releases](https://github.com/rechedev9/docuware-cli/releases) when one is published,
-unpack `dw` (`dw.exe` on Windows) into a folder on your `PATH`, and check with `dw --version`.
+Prebuilt binaries for Windows, macOS and Linux: [latest release](https://github.com/rechedev9/docuware-cli/releases/latest).
+Unpack `dw` (`dw.exe`) into a folder on your `PATH`.
 
-With Go 1.26+ installed you can build it instead:
+With Go 1.26+:
 
 ```sh
-go install github.com/rechedev9/docuware-cli/cmd/dw@latest   # installs into ~/go/bin (%USERPROFILE%\go\bin)
+go install github.com/rechedev9/docuware-cli/cmd/dw@latest
 ```
+
+More options and platform notes: [docs/install.md](docs/install.md).
+
+## Quickstart
+
+```sh
+dw login --url acme --user peggy.jenkins     # Cloud tenant "acme", or --url https://dms.example.com
+dw status                                    # server, account, what you can see
+dw cabinets
+dw fields Invoices                           # searchable fields and their types
+dw search Invoices COMPANY=Peters* "AMOUNT>=1000" INVOICE_DATE=2024-01-01..2024-12-31 --sort INVOICE_DATE:desc
+dw get Invoices 42                           # index fields and files
+dw text Invoices 42                          # OCR fulltext
+dw download Invoices 42 --pdf -o ./out/
+```
+
+Run `dw login` in a normal terminal: the password prompt needs one. The password is stored in the OS keyring
+(Windows Credential Manager, macOS Keychain, Secret Service) and tokens renew by themselves.
 
 ## Use with Claude Code
 
-1. **Log in once, in a normal terminal** (not through Claude Code: its shell cannot answer the hidden password prompt):
+```sh
+dw skill install          # writes ~/.claude/skills/docuware/SKILL.md
+```
 
-   ```sh
-   dw login --url <tenant> --user <docuware-user>
-   dw status
-   ```
+Restart Claude Code, check `/skills` lists `docuware`, and ask in plain language, e.g. *"Find the open invoices from
+Peters Engineering in DocuWare and summarize the biggest one."* No MCP server is needed.
 
-2. **Install the skill**, which tells Claude when and how to use `dw`:
+Optional, to skip the permission prompt on every call (`dw` cannot change data), in `~/.claude/settings.json`:
 
-   ```sh
-   dw skill install                          # user-wide: ~/.claude/skills/docuware/SKILL.md
-   dw skill install --dir .claude/skills     # or only for one project
-   ```
+```json
+{ "permissions": { "allow": ["Bash(dw *)", "PowerShell(dw *)"] } }
+```
 
-   Restart Claude Code and check that `/skills` lists `docuware`. Claude then picks it up on its own when you ask about
-   DocuWare documents, or you can call it with `/docuware`.
+Details: [docs/agents.md](docs/agents.md).
 
-3. **Optional: skip the permission prompt for every `dw` call.** `dw` cannot change data, so allowing it is low risk.
-   In `~/.claude/settings.json` (or a project's `.claude/settings.json`):
-
-   ```json
-   {
-     "permissions": {
-       "allow": ["Bash(dw *)", "PowerShell(dw *)"]
-     }
-   }
-   ```
-
-No MCP server or other Claude Code configuration is needed. Then just ask, for example:
-"Find the open invoices from Peters Engineering in DocuWare from this year and summarize the biggest one."
-
-### What the DocuWare side needs
+## What DocuWare needs
 
 - DocuWare 7.10 or newer (Cloud is always current).
-- A DocuWare user that can sign in with a DocuWare password and has rights on the file cabinets to search
-  (its search dialogs define which fields are searchable). A dedicated read-only user is a good idea.
-- Or, for unattended use, an OAuth application registered in DocuWare with a client secret; log in with `--client-id`.
+- A DocuWare user with a DocuWare password and rights on the file cabinets. Single sign-on accounts cannot use the
+  API. A dedicated read-only user is best.
+- Or an OAuth app registration with a client secret, for unattended use (`dw login --client-id`).
 
-## Sign in
+Checklist for the administrator: [docs/docuware-setup.md](docs/docuware-setup.md).
 
-```sh
-dw login --url acme --user peggy.jenkins        # Cloud tenant "acme"; prompts for the password
-dw login --url https://dms.example.com --user svc --password-stdin < pw.txt
-dw login --url acme --client-id <id> --password-stdin -p service   # OAuth2 client credentials
-```
+## Commands
 
-- Passwords and client secrets go to the OS keyring (Windows Credential Manager, macOS Keychain, Secret Service).
-  Profiles live in the user config dir (`dw/config.json`), tokens and metadata in the user cache dir.
-- Access tokens (60 min) are cached and renewed automatically. The token endpoint is remembered, so later runs skip discovery.
-- For CI or one-off runs, set `DW_URL` plus `DW_USERNAME`/`DW_PASSWORD` or `DW_CLIENT_ID`/`DW_CLIENT_SECRET`; they override the profile.
-- Other variables: `DW_PROFILE`, `DW_INSECURE=1` (self-signed on-prem only), `DW_NO_CACHE=1`,
-  `DW_CONFIG_DIR`, `DW_CACHE_DIR`, `DW_SECRET_STORE=file` (no keyring available).
-
-## Use
-
-```sh
-dw status                                   # who am I, what can I see
-dw cabinets [--baskets]
-dw fields Invoices                          # searchable fields: name, label, type, value list
-dw values Invoices STATUS
-dw search Invoices COMPANY=Peters* "AMOUNT>=1000" INVOICE_DATE=2024-01-01..2024-12-31 --sort INVOICE_DATE:desc
-dw get Invoices 42
-dw text Invoices 42 [--max-chars 0]
-dw download Invoices 42 [--pdf] [--annotations] [-o dir/ | -o -]
-dw api FileCabinets/<id>                    # raw GET for anything without a command
-```
-
-Search syntax: `FIELD=VALUE` (with `*`/`?` wildcards), `FIELD=FROM..TO`, `FIELD>=V`, `FIELD<=V`, `FIELD=EMPTY()`, `FIELD=NOTEMPTY()`.
-Repeating a text field ORs its values. `--or` combines conditions with OR. See `dw search --help`.
-
-Exit codes: `0` ok, `1` error, `2` usage or invalid condition, `3` authentication, `4` not found.
-
-## Design
-
-| Package | Role |
+| Command | Does |
 |---|---|
-| `internal/docuware` | REST client: OAuth2 discovery (IdentityServiceInfo → OpenID configuration → token), password and client-credentials grants, token renewal on 401, retries on 429, hypermedia links with documented fallbacks, search expressions, field decoding (`/Date(ms)/`, keywords, tables), textshot flattening |
-| `internal/config` | profiles, keyring secrets, token and metadata cache (1 h TTL) |
-| `internal/cli` | cobra commands and output |
-| `internal/dwfake` | in-memory DocuWare for tests; `go run ./internal/dwfake/cmd/dwfake` serves it to try `dw` without a server |
-| `skill` | the Claude Code skill, embedded in the binary |
+| `dw login` / `logout` / `status` | sign in, sign out, check the connection |
+| `dw cabinets` | list file cabinets (`--baskets` for trays) |
+| `dw dialogs <cabinet>` | list dialogs |
+| `dw fields <cabinet>` | searchable fields: name, label, type, value list |
+| `dw values <cabinet> <field>` | predefined values of a field |
+| `dw search <cabinet> [FIELD=VALUE ...]` | search; `--or`, `--sort`, `--limit`, `--offset` |
+| `dw get <cabinet> <id>` | one document's fields and files |
+| `dw text <cabinet> <id>` | OCR text, capped at 20000 characters |
+| `dw download <cabinet> <id>` | save the file (`--pdf`, `--section`, `-o`) |
+| `dw api <path>` | raw GET on any Platform path |
+| `dw skill [install]` | print or install the Claude Code skill |
 
-Security details: the bearer token is only ever sent to the configured host, even when a response links elsewhere;
-server-supplied file names are reduced to safe base names; downloads never overwrite files unless `--force`.
+Search conditions: `FIELD=VALUE` (wildcards `*` `?`), `FIELD=FROM..TO`, `FIELD>=V`, `FIELD<=V`, `FIELD=EMPTY()`,
+`FIELD=NOTEMPTY()`. A field may repeat only with `--or`. Exit codes: `0` ok, `1` error, `2` usage, `3` auth,
+`4` not found. Full reference: [docs/commands.md](docs/commands.md), [docs/search.md](docs/search.md),
+[docs/output.md](docs/output.md).
 
-## Tests
+## Documentation
+
+| Page | For |
+|---|---|
+| [Agent setup runbook](docs/agent-setup.md) | an AI agent installing dw for someone |
+| [Install](docs/install.md) · [Quickstart](docs/quickstart.md) | first steps |
+| [Using dw from agents](docs/agents.md) | Claude Code skill, permissions, calling patterns |
+| [DocuWare setup](docs/docuware-setup.md) | the DocuWare administrator |
+| [Search](docs/search.md) · [Commands](docs/commands.md) · [Output](docs/output.md) | reference |
+| [Authentication](docs/authentication.md) · [Configuration](docs/configuration.md) | sign-in, profiles, files, environment |
+| [Troubleshooting](docs/troubleshooting.md) | when something fails |
+| [Architecture](docs/architecture.md) · [DocuWare API notes](docs/docuware-api.md) · [Testing](docs/testing.md) · [Releasing](docs/releasing.md) | contributors |
+
+## Status
+
+The tests run against an in-memory DocuWare built from DocuWare's official samples, reference clients and recorded
+Cloud responses; CI runs them on Linux, Windows and macOS. dw has not yet been run against a live DocuWare. What that
+still has to confirm is listed in [docs/docuware-api.md](docs/docuware-api.md#what-dw-relies-on), with a checklist in
+[docs/testing.md](docs/testing.md#validating-against-a-real-docuware). Reports welcome.
+
+Roadmap: writes behind explicit opt-in (index fields, upload, delete), workflow tasks, Authorization Code + PKCE login.
+
+## Development
 
 ```sh
 go test ./...
+go run ./internal/dwfake/cmd/dwfake     # a fake DocuWare to try dw against
 ```
 
-The tests run against `internal/dwfake`, whose responses follow the official DocuWare REST samples and the JSON
-the community clients parse. They cannot prove behaviour of a real server.
+Contributors and coding agents: read [AGENTS.md](AGENTS.md) first.
 
-## To validate against a real DocuWare
+## License
 
-A free 30-day DocuWare Cloud trial (with sample data) works: https://start.docuware.com/info/get-your-free-trial-ss
-
-These points are implemented from documentation and reference clients and need a real server to confirm:
-
-1. Searches send no `fields` parameter and expect the result list's fields back.
-2. Several values on one text field are ORed; two values on a number or date field form a range.
-3. A search without conditions uses `GET /FileCabinets/{id}/Query/Documents`, and `count`/`start` page every query.
-4. `Date` fields are read in the local time zone (as the Python reference client does).
-5. Section fulltext is found through the `textshot` link, loading the section when the document omits it.
-6. Search dialog field types (`DWFieldType`) may use `Text`/`Numeric` or `String`/`Int`; both are handled.
-
-## Roadmap
-
-- Writes behind explicit opt-in and confirmation: update index fields, upload, delete.
-- Workflow tasks: list, show, confirm decisions (`workflows` → `tasks` → decision links).
-- Authorization Code + PKCE login for accounts that cannot use the password grant.
+MIT. Not affiliated with or endorsed by DocuWare GmbH.
