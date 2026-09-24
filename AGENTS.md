@@ -27,6 +27,7 @@ Go 1.26+ (required by `golang.org/x/term`). All files use LF line endings (`.git
 - `internal/config`: profiles, keyring secrets, token and metadata cache.
 - `internal/dwfake`: in-memory DocuWare used by every test.
 - `skill`: `SKILL.md`, embedded into the binary and installed by `dw skill install`.
+- `scripts/header.py`: renders the README banner `docs/assets/header.png` (`python scripts/header.py`, needs Pillow and numpy).
 
 Architecture and design rationale: [docs/architecture.md](docs/architecture.md).
 

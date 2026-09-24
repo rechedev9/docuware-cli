@@ -8,7 +8,7 @@ Documentation (raw Markdown):
 - Overview: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/index.md
 - Install: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/install.md
 - Quickstart: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/quickstart.md
-- Using dw from agents: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/agents.md
+- Using dw from agents: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/agent-usage.md
 - DocuWare setup (administrator): https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/docuware-setup.md
 - Search syntax: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/search.md
 - Commands: https://raw.githubusercontent.com/rechedev9/docuware-cli/main/docs/commands.md

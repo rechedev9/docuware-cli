@@ -76,4 +76,4 @@ Restart Claude Code and check that `/skills` lists `docuware`. Then ask in plain
 > Find the open invoices from Peters Engineering in DocuWare from this year and summarize the biggest one.
 
 Optional, to stop the permission prompt on every call: add `"Bash(dw *)"` and `"PowerShell(dw *)"` to
-`permissions.allow` in `~/.claude/settings.json`. Details: [Using dw from agents](agents.md).
+`permissions.allow` in `~/.claude/settings.json`. Details: [Using dw from agents](agent-usage.md).

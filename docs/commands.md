@@ -148,4 +148,4 @@ dw api FileCabinets/<cabinet-id>/Query/Documents -q count=5
 
 `dw skill` prints the embedded Claude Code skill. `dw skill install` writes it to `~/.claude/skills/docuware/SKILL.md`;
 `--dir <skills dir>` writes to `<dir>/docuware/SKILL.md` instead (for example `.claude/skills` for one project).
-See [Using dw from agents](agents.md).
+See [Using dw from agents](agent-usage.md).

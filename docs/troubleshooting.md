@@ -100,7 +100,7 @@ restart Claude Code. Reinstall with `dw skill install`.
 
 **Claude asks for permission on every `dw` call**
 Add `"Bash(dw *)"` and `"PowerShell(dw *)"` to `permissions.allow` in `~/.claude/settings.json`
-([Using dw from agents](agents.md#permissions)).
+([Using dw from agents](agent-usage.md#permissions)).
 
 **Claude cannot find `dw` although it works in your terminal**
 Claude Code was started before `dw` was put on the `PATH`. Restart it.

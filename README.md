@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/header.png" alt="dw: DocuWare from the terminal. Mount Fuji, a red sun and waves in ukiyo-e style." width="100%">
+</p>
+
 # dw 🗂️ — DocuWare from the terminal
 
 Search, read and download DocuWare documents with one binary, built so Claude Code and other agents can use it
@@ -63,7 +67,7 @@ Optional, to skip the permission prompt on every call (`dw` cannot change data),
 { "permissions": { "allow": ["Bash(dw *)", "PowerShell(dw *)"] } }
 ```
 
-Details: [docs/agents.md](docs/agents.md).
+Details: [docs/agent-usage.md](docs/agent-usage.md).
 
 ## What DocuWare needs
 
@@ -101,7 +105,7 @@ Search conditions: `FIELD=VALUE` (wildcards `*` `?`), `FIELD=FROM..TO`, `FIELD>=
 |---|---|
 | [Agent setup runbook](docs/agent-setup.md) | an AI agent installing dw for someone |
 | [Install](docs/install.md) · [Quickstart](docs/quickstart.md) | first steps |
-| [Using dw from agents](docs/agents.md) | Claude Code skill, permissions, calling patterns |
+| [Using dw from agents](docs/agent-usage.md) | Claude Code skill, permissions, calling patterns |
 | [DocuWare setup](docs/docuware-setup.md) | the DocuWare administrator |
 | [Search](docs/search.md) · [Commands](docs/commands.md) · [Output](docs/output.md) | reference |
 | [Authentication](docs/authentication.md) · [Configuration](docs/configuration.md) | sign-in, profiles, files, environment |

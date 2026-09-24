@@ -159,7 +159,7 @@ dw skill install --dir .claude/skills   # only the current project (run from the
 **Check:** the printed `SKILL.md` path exists.
 
 Other agents: if they support Agent Skills, pass their skills directory to `--dir`. Otherwise append the output of
-`dw skill` to the agent's instructions file (for example `AGENTS.md`). See [Using dw from agents](agents.md).
+`dw skill` to the agent's instructions file (for example `AGENTS.md`). See [Using dw from agents](agent-usage.md).
 
 ## 5. Smoke test
 
