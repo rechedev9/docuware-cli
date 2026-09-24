@@ -33,12 +33,13 @@ Conditions:
   FIELD=EMPTY()    the field is empty; FIELD=NOTEMPTY() has a value
 
 FIELD is the database name or the label shown by "dw fields"; dates use
-YYYY-MM-DD. Repeating a text field matches any of its values. Conditions are
-combined with AND unless --or is given. Without conditions the documents are
-listed as stored.`,
+YYYY-MM-DD. Conditions are combined with AND unless --or is given; a field
+may repeat only with --or (STATUS=Open STATUS=Overdue --or). DocuWare has no
+mixed AND/OR, so run one search per value when you need both. Without
+conditions the documents are listed as stored.`,
 		Example: `  dw search Invoices COMPANY=Peters* STATUS=Open
   dw search Invoices "AMOUNT>=1000" INVOICE_DATE=2024-01-01..2024-12-31 --sort INVOICE_DATE:desc
-  dw search Invoices STATUS=Open STATUS=Overdue --limit 50 --json`,
+  dw search Invoices STATUS=Open STATUS=Overdue --or --limit 50 --json`,
 		Args: minArgs(1, "a file cabinet name or id, then conditions"),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()

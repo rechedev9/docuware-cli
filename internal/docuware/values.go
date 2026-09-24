@@ -51,7 +51,7 @@ func (f FieldValue) Value() any {
 		return nil
 	}
 	switch strings.ToLower(f.ItemElementName) {
-	case "string":
+	case "string", "memo":
 		var s string
 		if json.Unmarshal(raw, &s) == nil {
 			if s == "" {
@@ -85,7 +85,7 @@ func (f FieldValue) Value() any {
 			}
 			return t.Format(time.RFC3339)
 		}
-	case "keywords":
+	case "keywords", "keyword":
 		var k struct {
 			Keyword []string `json:"Keyword"`
 		}

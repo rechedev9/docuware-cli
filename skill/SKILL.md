@@ -23,14 +23,14 @@ Cabinet arguments accept the name or the id. Add `--json` to any command for str
 
 | Syntax | Meaning |
 |---|---|
-| `COMPANY=Peters*` | exact match; `*` and `?` are wildcards; case-insensitive |
-| `STATUS=Open STATUS=Overdue` | repeating a text field matches any of the values |
+| `COMPANY=Peters*` | exact match; `*` and `?` are wildcards (`*` for any text, `?` for one character) |
 | `INVOICE_DATE=2024-01-01..2024-03-31` | range (number and date fields only) |
 | `AMOUNT>=1000`, `AMOUNT<=5000` | open-ended bounds; quote them in the shell |
 | `CONTACT=EMPTY()`, `CONTACT=NOTEMPTY()` | empty / non-empty field |
+| `STATUS=Open STATUS=Overdue --or` | either value; a field may only repeat with `--or` |
 
-- Conditions are ANDed; `--or` switches to OR (DocuWare has no mixed AND/OR).
-- Dates are `YYYY-MM-DD`. Decimals use a dot.
+- Conditions are ANDed; `--or` switches all of them to OR. DocuWare has no mixed AND/OR: for "(Open or Overdue) and Peters", run one search per status.
+- Dates are `YYYY-MM-DD`. Decimals use a dot. Quote conditions containing `<`, `>` or spaces.
 - Express every restriction as a condition. `--sort FIELD:desc` with `--limit` only orders and cuts the result.
 - Paging: default `--limit 20`. JSON output has `total`, `has_more` and `next_offset`; pass `--offset <next_offset>` for the next page.
 - A search without conditions lists the cabinet's documents as stored.

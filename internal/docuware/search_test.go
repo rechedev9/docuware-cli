@@ -28,9 +28,14 @@ func TestBuildExpression(t *testing.T) {
 			want: `{"Condition":[{"DBName":"COMPANY","Value":["Peters*"]}],"Operation":"And"}`,
 		},
 		{
-			name: "label, OR within a text field, parentheses escaped",
-			q:    Query{Conditions: []string{"company=Acme (EU)", "Company=Beta"}, Or: true},
-			want: `{"Condition":[{"DBName":"COMPANY","Value":["Acme \\(EU\\)","Beta"]}],"Operation":"Or"}`,
+			name: "label, repeated field with OR, parentheses escaped",
+			q:    Query{Conditions: []string{"company=Acme (EU)", "Company=Beta", "COMPANY=EMPTY()"}, Or: true},
+			want: `{"Condition":[{"DBName":"COMPANY","Value":["Acme \\(EU\\)"]},{"DBName":"COMPANY","Value":["Beta"]},{"DBName":"COMPANY","Value":["EMPTY()"]}],"Operation":"Or"}`,
+		},
+		{
+			name: "two exact dates with OR",
+			q:    Query{Conditions: []string{"INVOICE_DATE=2024-01-01", "INVOICE_DATE=2024-02-01"}, Or: true},
+			want: `{"Condition":[{"DBName":"INVOICE_DATE","Value":["2024-01-01"]},{"DBName":"INVOICE_DATE","Value":["2024-02-01"]}],"Operation":"Or"}`,
 		},
 		{
 			name: "date range and open bounds merged",
@@ -51,7 +56,9 @@ func TestBuildExpression(t *testing.T) {
 		{name: "missing operator", q: Query{Conditions: []string{"COMPANY"}}, error: "use FIELD=VALUE"},
 		{name: "empty value", q: Query{Conditions: []string{"COMPANY="}}, error: "COMPANY=EMPTY()"},
 		{name: "range on text", q: Query{Conditions: []string{"COMPANY>=A"}}, error: "text field"},
-		{name: "two exact dates", q: Query{Conditions: []string{"INVOICE_DATE=2024-01-01", "INVOICE_DATE=2024-02-01"}}, error: "as a range"},
+		{name: "repeated text without OR", q: Query{Conditions: []string{"COMPANY=A", "COMPANY=B"}}, error: "add --or"},
+		{name: "two exact dates", q: Query{Conditions: []string{"INVOICE_DATE=2024-01-01", "INVOICE_DATE=2024-02-01"}}, error: "INVOICE_DATE=FROM..TO"},
+		{name: "empty with range", q: Query{Conditions: []string{"AMOUNT>=1", "AMOUNT=EMPTY()"}}, error: "cannot be combined"},
 		{name: "bad date", q: Query{Conditions: []string{"INVOICE_DATE=15.01.2024"}}, error: "YYYY-MM-DD"},
 		{name: "bad number", q: Query{Conditions: []string{"AMOUNT=1,5"}}, error: "not a number"},
 		{name: "bound twice", q: Query{Conditions: []string{"AMOUNT>=1", "AMOUNT>=2"}}, error: "given twice"},
@@ -97,6 +104,8 @@ func TestFieldValueDecoding(t *testing.T) {
 		{`{"ItemElementName":"DateTime","Item":"/Date(1705312800000+0100)/"}`, "2024-01-15T11:00:00+01:00"},
 		{`{"ItemElementName":"Date","Item":"/Date(-62135596800000)/"}`, nil},
 		{`{"ItemElementName":"Keywords","Item":{"Keyword":["a","b"]}}`, "a, b"},
+		{`{"ItemElementName":"Memo","Item":"long text"}`, "long text"},
+		{`{"ItemElementName":"Keywords","Item":{"$type":"DocumentIndexFieldKeywords","Keyword":[]}}`, nil},
 		{`{"ItemElementName":"Table","Item":{"Row":[{"ColumnValue":[{"FieldName":"POS","ItemElementName":"Int","Item":1}]}]}}`, `[{"POS":1}]`},
 		{`{"ItemElementName":"String","Item":"x","IsNull":true}`, nil},
 	}

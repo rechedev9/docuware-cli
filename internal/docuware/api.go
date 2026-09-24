@@ -152,6 +152,9 @@ func (c *Client) SelectList(ctx context.Context, f DialogField) ([]any, error) {
 	return res.Value, err
 }
 
+// maxPageSize is the largest count DocuWare accepts for one result page.
+const maxPageSize = 10000
+
 // SearchResult is the outcome of Search.
 type SearchResult struct {
 	Total   int
@@ -167,7 +170,8 @@ func (c *Client) Search(ctx context.Context, fc FileCabinet, dlg *Dialog, q Quer
 		limit = 50
 	}
 	params := url.Values{
-		"count": {strconv.Itoa(limit)},
+		// DocuWare Cloud refuses larger pages (KBA-36909); next links cover the rest.
+		"count": {strconv.Itoa(min(limit, maxPageSize))},
 		"start": {strconv.Itoa(max(q.Offset, 0))},
 	}
 	var page QueryResult

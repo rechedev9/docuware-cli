@@ -151,7 +151,7 @@ func classify(err error) (int, string) {
 	case errors.Is(err, docuware.ErrNoCredentials):
 		return exitAuth, "run `dw login --url <server> --user <name>` in a terminal, or set DW_URL with DW_USERNAME/DW_PASSWORD (or DW_CLIENT_ID/DW_CLIENT_SECRET)"
 	case errors.As(err, &ae):
-		return exitAuth, "check the username/password or the client id/secret"
+		return exitAuth, "check the username/password or the client id/secret; accounts that sign in through SSO (Microsoft, ADFS, ...) cannot use the API, so use a DocuWare user with a DocuWare password or an OAuth app"
 	case errors.As(err, &nf):
 		return exitNotFound, ""
 	case errors.Is(err, docuware.ErrNoText):
@@ -164,6 +164,10 @@ func classify(err error) (int, string) {
 			return exitAuth, "this DocuWare user has no permission for that resource"
 		case 404:
 			return exitNotFound, ""
+		case 422:
+			return exitError, "DocuWare rejected the query; check values with `dw fields <cabinet>` and narrow the conditions (DocuWare Cloud refuses searches with more than 10000 hits)"
+		case 429:
+			return exitError, "DocuWare Cloud allows about 60 calls per minute on some endpoints; wait a minute and retry"
 		}
 	}
 	return exitError, ""

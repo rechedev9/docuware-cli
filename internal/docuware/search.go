@@ -11,7 +11,8 @@ import (
 // Conditions use FIELD=VALUE, FIELD>=VALUE, FIELD<=VALUE or FIELD=FROM..TO.
 // FIELD is the database name or the dialog label (case-insensitive).
 // Text values keep DocuWare's wildcards (* and ?); EMPTY() and NOTEMPTY()
-// match empty and non-empty fields. Repeating a text field ORs its values.
+// match empty and non-empty fields. A field may repeat only with Or, where
+// each value becomes its own condition.
 type Query struct {
 	Conditions []string
 	Or         bool
@@ -28,8 +29,8 @@ type Expression struct {
 	SortOrder []SortField `json:"SortOrder,omitempty"`
 }
 
-// Condition restricts one field. For number and date fields a two-element
-// Value is a range, with null for an open end.
+// Condition restricts one field. A two-element Value is a range (from, to),
+// with null for an open end; it never means "either value".
 type Condition struct {
 	DBName string    `json:"DBName"`
 	Value  []*string `json:"Value"`
@@ -43,6 +44,7 @@ type SortField struct {
 
 type fieldCond struct {
 	field  DialogField
+	or     bool
 	values []string
 	lo, hi *string
 	ranged bool
@@ -68,7 +70,7 @@ func BuildExpression(fields []DialogField, q Query) (Expression, error) {
 		}
 		fc, ok := conds[f.DBFieldName]
 		if !ok {
-			fc = &fieldCond{field: f}
+			fc = &fieldCond{field: f, or: q.Or}
 			conds[f.DBFieldName] = fc
 			order = append(order, f.DBFieldName)
 		}
@@ -78,15 +80,15 @@ func BuildExpression(fields []DialogField, q Query) (Expression, error) {
 	}
 	for _, name := range order {
 		fc := conds[name]
-		c := Condition{DBName: name}
 		if fc.ranged {
-			c.Value = []*string{fc.lo, fc.hi}
-		} else {
-			for _, v := range fc.values {
-				c.Value = append(c.Value, &v)
-			}
+			expr.Condition = append(expr.Condition, Condition{DBName: name, Value: []*string{fc.lo, fc.hi}})
+			continue
 		}
-		expr.Condition = append(expr.Condition, c)
+		// DocuWare reads two values in one condition as a range, so each
+		// value gets its own condition (only reachable with Or).
+		for _, v := range fc.values {
+			expr.Condition = append(expr.Condition, Condition{DBName: name, Value: []*string{&v}})
+		}
 	}
 	for _, s := range q.Sort {
 		sf, err := parseSort(fields, s)
@@ -143,8 +145,11 @@ func (fc *fieldCond) add(op, value string) error {
 		return queryErr("empty value for %s; use %s=EMPTY() to find documents where it is empty", f.DBFieldName, f.DBFieldName)
 	}
 	if special, ok := specialValue(value); ok {
-		if fc.ranged || len(fc.values) > 0 {
-			return queryErr("%s: %s cannot be combined with other values", f.DBFieldName, special)
+		if fc.ranged {
+			return queryErr("%s: %s cannot be combined with a range", f.DBFieldName, special)
+		}
+		if len(fc.values) > 0 && !fc.or {
+			return fc.repeatErr()
 		}
 		fc.values = append(fc.values, special)
 		return nil
@@ -198,8 +203,8 @@ func (fc *fieldCond) add(op, value string) error {
 	if fc.ranged {
 		return queryErr("%s: cannot mix a range with exact values", f.DBFieldName)
 	}
-	if kind != kindText && len(fc.values) > 0 {
-		return queryErr("%s: DocuWare reads two values on a number or date field as a range; use %s=FROM..TO or run separate searches", f.DBFieldName, f.DBFieldName)
+	if len(fc.values) > 0 && !fc.or {
+		return fc.repeatErr()
 	}
 	v, err := normalizeValue(f, kind, value)
 	if err != nil {
@@ -207,6 +212,15 @@ func (fc *fieldCond) add(op, value string) error {
 	}
 	fc.values = append(fc.values, v)
 	return nil
+}
+
+func (fc *fieldCond) repeatErr() error {
+	name := fc.field.DBFieldName
+	msg := "%s is given twice; add --or to match any of the values (all conditions are then ORed), or run one search per value"
+	if fieldKind(fc.field.DWFieldType) != kindText {
+		msg += "; for a span use %[1]s=FROM..TO"
+	}
+	return queryErr(msg, name)
 }
 
 type kind int

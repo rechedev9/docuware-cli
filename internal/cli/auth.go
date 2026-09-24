@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -106,7 +107,8 @@ For on-premises servers without dots in the name, pass the scheme
 			}
 			fprintf(a.stdout, "Logged in to %s (DocuWare %s) as %s, profile %q.\n", root, version, account, name)
 			if usedFile {
-				fprintf(a.stderr, "warning: OS keyring unavailable; the %s is stored in %s\n", label, store.ConfigDir)
+				fprintf(a.stderr, "warning: the %s is stored unencrypted in %s (OS keyring unavailable or DW_SECRET_STORE=file)\n",
+					label, filepath.Join(store.ConfigDir, "secrets.json"))
 			}
 			return nil
 		},
